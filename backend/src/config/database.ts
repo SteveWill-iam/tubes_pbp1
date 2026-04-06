@@ -5,8 +5,8 @@ dotenv.config();
 
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'tubes',
-  process.env.DB_USERNAME || 'developer',
-  process.env.DB_PASSWORD || 'developer123',
+  process.env.DB_USERNAME || 'postgres',
+  process.env.DB_PASSWORD || '@awsed121;',
   {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),

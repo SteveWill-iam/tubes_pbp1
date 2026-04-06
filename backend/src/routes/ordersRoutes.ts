@@ -11,5 +11,6 @@ router.post('/', OrdersController.create);
 router.get('/', authMiddleware, OrdersController.getAll);
 router.get('/:id', authMiddleware, OrdersController.getById);
 router.patch('/:id/status', authMiddleware, OrdersController.updateStatus);
+router.patch('/:id/payment/confirm', authMiddleware, OrdersController.confirmPayment);
 
 export default router;

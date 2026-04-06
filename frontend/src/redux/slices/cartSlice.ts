@@ -12,6 +12,7 @@ interface CartState {
   items: CartItem[];
   total: number;
   order_type: 'dine_in' | 'takeaway' | null;
+  payment_method: 'counter' | 'machine' | null;
 }
 
 const initialState: CartState = {
@@ -26,6 +27,10 @@ const initialState: CartState = {
   order_type: (() => {
     const saved = localStorage.getItem('cart');
     return saved ? JSON.parse(saved).order_type : null;
+  })(),
+  payment_method: (() => {
+    const saved = localStorage.getItem('cart');
+    return saved ? JSON.parse(saved).payment_method : null;
   })(),
 };
 
@@ -72,14 +77,20 @@ const cartSlice = createSlice({
       localStorage.setItem('cart', JSON.stringify(state));
     },
 
+    setPaymentMethod: (state, action: PayloadAction<'counter' | 'machine'>) => {
+      state.payment_method = action.payload;
+      localStorage.setItem('cart', JSON.stringify(state));
+    },
+
     clearCart: (state) => {
       state.items = [];
       state.total = 0;
       state.order_type = null;
+      state.payment_method = null;
       localStorage.setItem('cart', JSON.stringify(state));
     },
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, setOrderType, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, updateQuantity, setOrderType, setPaymentMethod, clearCart } = cartSlice.actions;
 export default cartSlice.reducer;

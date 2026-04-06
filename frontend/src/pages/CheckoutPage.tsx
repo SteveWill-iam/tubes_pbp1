@@ -67,7 +67,7 @@ export const CheckoutPage: React.FC = () => {
             Back to Cart
           </button>
           <button
-            onClick={() => navigate('/payment')}
+            onClick={() => navigate('/payment-method')}
             className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded"
           >
             Proceed to Payment

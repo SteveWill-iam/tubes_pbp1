@@ -17,6 +17,8 @@ interface Order {
   status: 'processed' | 'completed';
   order_type: 'dine_in' | 'takeaway';
   total_price: number;
+  payment_method: 'counter' | 'machine';
+  payment_status: 'pending' | 'completed';
   created_at: string;
   items?: OrderItem[];
 }

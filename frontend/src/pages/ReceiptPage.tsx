@@ -71,6 +71,20 @@ export const ReceiptPage: React.FC = () => {
           </div>
 
           <div className="mb-6 pb-4 border-b">
+            <h3 className="font-bold text-lg text-gray-800 mb-3">Payment Information</h3>
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Payment Method:</span>
+              <span>{currentOrder.payment_method === 'counter' ? '🏪 Bayar di Kasir' : '📱 Bayar di Mesin'}</span>
+            </div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-600">Payment Status:</span>
+              <span className={currentOrder.payment_status === 'completed' ? 'font-bold text-green-600' : 'font-bold text-yellow-600'}>
+                {currentOrder.payment_status === 'completed' ? '✓ Pembayaran Selesai' : '⏳ Menunggu Pembayaran'}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-6 pb-4 border-b">
             <h3 className="font-bold text-lg text-gray-800 mb-3">Items</h3>
             {currentOrder.items?.map((item) => (
               <div key={item.id} className="flex gap-3 mb-3 pb-3 border-b last:border-b-0 last:pb-0">

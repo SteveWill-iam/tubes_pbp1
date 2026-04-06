@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { MenuPage } from './pages/MenuPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { PaymentMethodPage } from './pages/PaymentMethodPage';
 import { PaymentPage } from './pages/PaymentPage';
 import { ReceiptPage } from './pages/ReceiptPage';
 
@@ -23,6 +24,7 @@ function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/payment-method" element={<PaymentMethodPage />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/receipt" element={<ReceiptPage />} />
 

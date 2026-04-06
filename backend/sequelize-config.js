@@ -4,8 +4,8 @@ dotenv.config();
 
 export default {
   development: {
-    username: process.env.DB_USERNAME || 'developer',
-    password: process.env.DB_PASSWORD || 'developer123',
+    username: process.env.DB_USERNAME || 'postgres',
+    password: process.env.DB_PASSWORD || '@awsed121;',
     database: process.env.DB_NAME || 'tubes',
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),
@@ -17,8 +17,8 @@ export default {
     },
   },
   test: {
-    username: process.env.DB_USERNAME || 'developer',
-    password: process.env.DB_PASSWORD || 'developer123',
+    username: process.env.DB_USERNAME || 'postgres',
+    password: process.env.DB_PASSWORD || '@awsed121;',
     database: 'tubes_test',
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),

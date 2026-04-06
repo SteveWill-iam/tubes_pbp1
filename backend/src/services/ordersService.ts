@@ -1,5 +1,5 @@
 import { Order, OrderItem, Product } from '../models/index.js';
-import { OrderStatus, OrderType } from '../models/Order.js';
+import { OrderStatus, OrderType, PaymentMethod, PaymentStatus } from '../models/Order.js';
 import sequelize from '../config/database.js';
 import { Op } from 'sequelize';
 
@@ -11,21 +11,26 @@ export interface CartItem {
 export interface CreateOrderPayload {
   items: CartItem[];
   order_type: OrderType;
+  payment_method?: PaymentMethod;
 }
 
 export class OrdersService {
   static async generateQueueNumber(): Promise<number> {
-    // Get today's date at midnight
+    // Get today's date range (midnight to end of day)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Find max queue_number for today (simplified approach)
+    // Find max queue_number for today with date range filter (more reliable than DATE function)
     const lastOrder = await Order.findOne({
-      where: sequelize.where(
-        sequelize.fn('DATE', sequelize.col('created_at')),
-        Op.eq,
-        sequelize.fn('DATE', today)
-      ),
+      where: {
+        created_at: {
+          [Op.gte]: today,
+          [Op.lt]: tomorrow,
+        },
+      },
       order: [['queue_number', 'DESC']],
     });
 
@@ -33,7 +38,7 @@ export class OrdersService {
   }
 
   static async createOrder(payload: CreateOrderPayload) {
-    const { items, order_type } = payload;
+    const { items, order_type, payment_method = PaymentMethod.MACHINE } = payload;
 
     if (!items || items.length === 0) {
       throw new Error('Cart cannot be empty');
@@ -63,12 +68,19 @@ export class OrdersService {
     // Generate queue number
     const queueNumber = await this.generateQueueNumber();
 
+    // Determine payment status based on payment method
+    const paymentStatus = payment_method === PaymentMethod.COUNTER 
+      ? PaymentStatus.PENDING 
+      : PaymentStatus.COMPLETED;
+
     // Create order
     const order = await Order.create({
       queue_number: queueNumber,
       status: OrderStatus.PROCESSED,
       order_type,
       total_price: totalPrice,
+      payment_method,
+      payment_status: paymentStatus,
     });
 
     // Create order items (price snapshot)
@@ -121,6 +133,23 @@ export class OrdersService {
     if (!order) {
       throw new Error('Order not found');
     }
+
+    return order;
+  }
+
+  static async confirmPayment(orderId: string) {
+    const order = await Order.findByPk(orderId);
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.payment_status === PaymentStatus.COMPLETED) {
+      throw new Error('Payment already confirmed');
+    }
+
+    order.payment_status = PaymentStatus.COMPLETED;
+    await order.save();
 
     return order;
   }

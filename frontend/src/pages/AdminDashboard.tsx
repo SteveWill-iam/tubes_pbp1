@@ -70,6 +70,21 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleConfirmPayment = async (orderId: string) => {
+    try {
+      const response = await apiClient.patch(`/orders/${orderId}/payment/confirm`);
+      // Update the local state with the confirmed order
+      const updatedOrders = orders.map(order => 
+        order.id === orderId ? response.data : order
+      );
+      dispatch(setOrders(updatedOrders));
+      // Update the selected order modal
+      setSelectedOrder(response.data);
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
+    }
+  };
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
@@ -133,6 +148,8 @@ export const AdminDashboard: React.FC = () => {
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Type</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Total</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Payment</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Payment Status</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Time</th>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-800">Action</th>
                 </tr>
@@ -156,6 +173,18 @@ export const AdminDashboard: React.FC = () => {
                         }`}
                       >
                         {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-sm">
+                      {order.payment_method === 'counter' ? '🏪 Kasir' : '📱 Mesin'}
+                    </td>
+                    <td className="px-6 py-3">
+                      <span
+                        className={`px-3 py-1 rounded text-sm font-bold ${
+                          order.payment_status === 'completed' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
+                        }`}
+                      >
+                        {order.payment_status === 'completed' ? '✓ Selesai' : '⏳ Pending'}
                       </span>
                     </td>
                     <td className="px-6 py-3 text-sm">
@@ -190,8 +219,16 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-sm text-gray-600 mb-2">
                 <strong>Type:</strong> {selectedOrder.order_type === 'dine_in' ? 'Dine In' : 'Takeaway'}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 mb-2">
                 <strong>Status:</strong> {selectedOrder.status}
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Payment Method:</strong> {selectedOrder.payment_method === 'counter' ? '🏪 Bayar di Kasir' : '📱 Bayar di Mesin'}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Payment Status:</strong> <span className={selectedOrder.payment_status === 'completed' ? 'text-green-600 font-bold' : 'text-yellow-600 font-bold'}>
+                  {selectedOrder.payment_status === 'completed' ? '✓ Selesai' : '⏳ Menunggu Konfirmasi'}
+                </span>
               </p>
             </div>
 
@@ -205,6 +242,14 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex gap-2">
+              {selectedOrder.payment_method === 'counter' && selectedOrder.payment_status === 'pending' && (
+                <button
+                  onClick={() => handleConfirmPayment(selectedOrder.id)}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded"
+                >
+                  💳 Konfirmasi Bayar
+                </button>
+              )}
               <button
                 onClick={() =>
                   handleStatusUpdate(

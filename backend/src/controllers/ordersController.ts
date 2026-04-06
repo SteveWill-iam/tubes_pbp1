@@ -1,17 +1,21 @@
 import { Request, Response } from 'express';
 import { OrdersService } from '../services/ordersService.js';
-import { OrderStatus } from '../models/Order.js';
+import { OrderStatus, PaymentMethod } from '../models/Order.js';
 
 export class OrdersController {
   static async create(req: Request, res: Response) {
     try {
-      const { items, order_type } = req.body;
+      const { items, order_type, payment_method } = req.body;
 
       if (!items || !order_type) {
         return res.status(400).json({ error: 'Items and order_type are required' });
       }
 
-      const order = await OrdersService.createOrder({ items, order_type });
+      if (payment_method && !Object.values(PaymentMethod).includes(payment_method)) {
+        return res.status(400).json({ error: 'Invalid payment_method' });
+      }
+
+      const order = await OrdersService.createOrder({ items, order_type, payment_method });
       res.status(201).json(order);
     } catch (error: any) {
       console.error('[Create Order Error]', error.message);
@@ -56,6 +60,17 @@ export class OrdersController {
       res.json(order);
     } catch (error: any) {
       console.error('[Update Order Status Error]', error.message);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  static async confirmPayment(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const order = await OrdersService.confirmPayment(id);
+      res.json(order);
+    } catch (error: any) {
+      console.error('[Confirm Payment Error]', error.message);
       res.status(500).json({ error: error.message });
     }
   }
