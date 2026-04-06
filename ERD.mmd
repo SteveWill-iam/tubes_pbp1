@@ -1,0 +1,38 @@
+erDiagram
+
+    ADMINS {
+        uuid id PK
+        string username
+        string password_hash
+        timestamp created_at
+    }
+
+    PRODUCTS {
+        uuid id PK
+        string name
+        text description
+        string category
+        int price
+        string image_url
+        timestamp created_at
+    }
+
+    ORDERS {
+        uuid id PK
+        int queue_number
+        enum status "processed | completed"
+        enum order_type "dine_in | takeaway"
+        int total_price
+        timestamp created_at
+    }
+
+    ORDER_ITEMS {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        int quantity
+        int price
+    }
+
+    ORDERS ||--o{ ORDER_ITEMS : has
+    PRODUCTS ||--o{ ORDER_ITEMS : contains
