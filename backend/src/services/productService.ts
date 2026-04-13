@@ -1,9 +1,9 @@
-import { Product } from '../models/index.js';
+import { Product, Category } from '../models/index.js';
 
 export interface CreateProductPayload {
   name: string;
   description?: string;
-  category: string;
+  categories: string[];
   price: number;
   image_url?: string;
 }
@@ -11,7 +11,7 @@ export interface CreateProductPayload {
 export interface UpdateProductPayload {
   name?: string;
   description?: string;
-  category?: string;
+  categories?: string[];
   price?: number;
   image_url?: string;
 }
@@ -22,13 +22,28 @@ export class ProductService {
       order: [['created_at', 'DESC']],
       limit,
       offset,
+      include: [
+        {
+          model: Category,
+          as: 'categories',
+          through: { attributes: [] },
+        },
+      ],
     });
 
     return { total: count, products: rows };
   }
 
   static async getById(id: string) {
-    const product = await Product.findByPk(id);
+    const product = await Product.findByPk(id, {
+      include: [
+        {
+          model: Category,
+          as: 'categories',
+          through: { attributes: [] },
+        },
+      ],
+    });
 
     if (!product) {
       throw new Error('Product not found');
@@ -41,12 +56,36 @@ export class ProductService {
     const product = await Product.create({
       name: payload.name,
       description: payload.description || '',
-      category: payload.category,
       price: payload.price,
       image_url: payload.image_url || null,
     });
 
-    return product;
+    // Set categories
+    if (payload.categories && payload.categories.length > 0) {
+      // Verify all category IDs exist
+      const categories = await Category.findAll({
+        where: { id: payload.categories },
+      });
+
+      if (categories.length !== payload.categories.length) {
+        throw new Error('One or more category IDs do not exist');
+      }
+
+      await product.setCategories(payload.categories);
+    }
+
+    // Reload product with categories
+    const productWithCategories = await Product.findByPk(product.id, {
+      include: [
+        {
+          model: Category,
+          as: 'categories',
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    return productWithCategories;
   }
 
   static async update(id: string, payload: UpdateProductPayload) {
@@ -56,10 +95,42 @@ export class ProductService {
       throw new Error('Product not found');
     }
 
-    Object.assign(product, payload);
+    // Update basic fields
+    const updateData = { ...payload };
+    delete (updateData as any).categories; // Remove categories from update data
+
+    Object.assign(product, updateData);
     await product.save();
 
-    return product;
+    // Update categories if provided
+    if (payload.categories && payload.categories.length > 0) {
+      // Verify all category IDs exist
+      const categories = await Category.findAll({
+        where: { id: payload.categories },
+      });
+
+      if (categories.length !== payload.categories.length) {
+        throw new Error('One or more category IDs do not exist');
+      }
+
+      await product.setCategories(payload.categories);
+    } else if (payload.categories !== undefined && payload.categories.length === 0) {
+      // Clear categories if explicitly set to empty (though not recommended)
+      await product.setCategories([]);
+    }
+
+    // Reload product with categories
+    const productWithCategories = await Product.findByPk(id, {
+      include: [
+        {
+          model: Category,
+          as: 'categories',
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    return productWithCategories;
   }
 
   static async delete(id: string) {

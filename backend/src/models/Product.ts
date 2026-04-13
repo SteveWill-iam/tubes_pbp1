@@ -6,7 +6,6 @@ interface ProductAttributes {
   id: string;
   name: string;
   description: string;
-  category: string;
   price: number;
   image_url: string | null;
   created_at: Date;
@@ -18,7 +17,6 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
   declare id: string;
   declare name: string;
   declare description: string;
-  declare category: string;
   declare price: number;
   declare image_url: string | null;
   declare created_at: Date;
@@ -38,10 +36,6 @@ Product.init(
     description: {
       type: DataTypes.TEXT,
       allowNull: true,
-    },
-    category: {
-      type: DataTypes.STRING,
-      allowNull: false,
     },
     price: {
       type: DataTypes.INTEGER,

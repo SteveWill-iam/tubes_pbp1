@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '../redux/store';
 import { addToCart } from '../redux/slices/cartSlice';
 import { setProducts, setLoading } from '../redux/slices/productsSlice';
+import { fetchCategories, setSelectedCategory } from '../redux/slices/categoriesSlice';
 import apiClient from '../api/client';
 import { getImageUrl } from '../utils/imageUrl';
 
@@ -12,6 +13,7 @@ export const MenuPage: React.FC = () => {
   const navigate = useNavigate();
   const { list: products, isLoading } = useSelector((state: RootState) => state.products);
   const { items: cartItems } = useSelector((state: RootState) => state.cart);
+  const { categories, selectedCategory } = useSelector((state: RootState) => state.categories);
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,6 +28,7 @@ export const MenuPage: React.FC = () => {
     };
 
     fetchProducts();
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   const handleAddToCart = (product: any) => {
@@ -48,13 +51,12 @@ export const MenuPage: React.FC = () => {
     return cartItems.find((item) => item.product_id === productId)?.quantity || 0;
   };
 
-  const groupedProducts = products.reduce((acc: any, product: any) => {
-    if (!acc[product.category]) {
-      acc[product.category] = [];
-    }
-    acc[product.category].push(product);
-    return acc;
-  }, {});
+  // Filter products by selected category
+  const filteredProducts = selectedCategory
+    ? products.filter((product: any) =>
+        product.categories?.some((cat: any) => cat.id === selectedCategory)
+      )
+    : products;
 
   return (
     <div className="min-h-screen bg-yellow-50 p-4">
@@ -85,50 +87,78 @@ export const MenuPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Category Filter Buttons */}
+        {categories && categories.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            <button
+              onClick={() => dispatch(setSelectedCategory(null))}
+              className={`px-4 py-2 rounded font-semibold transition ${
+                selectedCategory === null
+                  ? 'bg-red-600 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-red-600'
+              }`}
+            >
+              Semua
+            </button>
+            {categories.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => dispatch(setSelectedCategory(cat.id))}
+                className={`px-4 py-2 rounded font-semibold transition ${
+                  selectedCategory === cat.id
+                    ? 'bg-red-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-red-600'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {isLoading ? (
           <p className="text-center text-gray-600">Loading products...</p>
-        ) : (
-          Object.entries(groupedProducts).map(([category, items]: [string, any]) => (
-            <div key={category} className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-700 mb-4">{category}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {items.map((product: any) => {
-                  const cartQty = getCartQuantity(product.id);
-                  const isAnimating = addedProductId === product.id;
-                  
-                  return (
-                    <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition relative">
-                      {product.image_url && (
-                        <div className="bg-gray-100 flex items-center justify-center h-40">
-                          <img src={getImageUrl(product.image_url)} alt={product.name} className="w-full h-40 object-contain" />
-                        </div>
-                      )}
-                      <div className="p-4">
-                        <h3 className="font-bold text-lg text-gray-800">{product.name}</h3>
-                        <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-lg font-bold text-red-600">Rp {product.price.toLocaleString()}</span>
-                          {cartQty > 0 && (
-                            <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                              In cart: {cartQty}
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          className={`w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded transition shadow-md ${
-                            isAnimating ? 'btn-add-animate bg-green-800' : ''
-                          }`}
-                        >
-                          {isAnimating ? '✓ Added!' : '➕ Add to Cart'}
-                        </button>
-                      </div>
+        ) : filteredProducts && filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {filteredProducts.map((product: any) => {
+              const cartQty = getCartQuantity(product.id);
+              const isAnimating = addedProductId === product.id;
+              
+              return (
+                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition relative">
+                  {product.image_url && (
+                    <div className="bg-gray-100 flex items-center justify-center h-40">
+                      <img src={getImageUrl(product.image_url)} alt={product.name} className="w-full h-40 object-contain" />
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))
+                  )}
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg text-gray-800">{product.name}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-lg font-bold text-red-600">Rp {product.price.toLocaleString()}</span>
+                      {cartQty > 0 && (
+                        <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          In cart: {cartQty}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className={`w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded transition shadow-md ${
+                        isAnimating ? 'btn-add-animate bg-green-800' : ''
+                      }`}
+                    >
+                      {isAnimating ? '✓ Added!' : '➕ Add to Cart'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-center text-gray-600 text-lg">
+            {selectedCategory ? 'No products found in this category' : 'No products available'}
+          </p>
         )}
       </div>
     </div>

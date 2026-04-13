@@ -33,23 +33,24 @@ tubes/
 ├── backend/                    # Node.js Express backend
 │   ├── src/
 │   │   ├── config/            # Database configuration
-│   │   ├── models/            # Sequelize models
-│   │   ├── controllers/       # Route controllers
-│   │   ├── services/          # Business logic
-│   │   ├── middleware/        # Express middleware
-│   │   ├── routes/            # API routes
-│   │   ├── seeders/           # Database seeders
+│   │   ├── models/            # Sequelize models (Product, Category, Order, OrderItem, Admin)
+│   │   ├── controllers/       # Route controllers (product, category, order, auth, stats)
+│   │   ├── services/          # Business logic (productService, categoryService, etc.)
+│   │   ├── middleware/        # Express middleware (auth, multer)
+│   │   ├── routes/            # API routes (products, categories, orders, auth, stats)
+│   │   ├── seeders/           # Database seeders (initial categories)
 │   │   └── index.ts           # Entry point
+│   ├── migrations/            # Database migrations (categories, initial tables)
 │   ├── uploads/               # Image storage
 │   ├── package.json
 │   └── tsconfig.json
 │
 ├── frontend/                   # React TypeScript frontend
 │   ├── src/
-│   │   ├── redux/             # Redux store & slices
-│   │   ├── pages/             # Page components
+│   │   ├── redux/             # Redux store & slices (products, categories, orders, auth, cart, stats)
+│   │   ├── pages/             # Page components (Menu with category filter, AdminCategoriesPage, etc.)
 │   │   ├── components/        # Reusable components
-│   │   ├── routes/            # Route configuration
+│   │   ├── routes/            # Route configuration (PrivateRoute)
 │   │   ├── api/               # API client
 │   │   ├── App.tsx            # Root component
 │   │   └── main.tsx           # Entry point
@@ -131,8 +132,10 @@ Frontend runs on `http://localhost:3001`
 ### Public Routes
 
 - `GET /api/health` - Health check
-- `GET /api/products` - Get all products
-- `GET /api/products/:id` - Get product by ID
+- `GET /api/products` - Get all products (with categories)
+- `GET /api/products/:id` - Get product by ID (with categories)
+- `GET /api/categories` - Get all categories (paginated)
+- `GET /api/categories/:id` - Get category by ID (with associated products)
 - `POST /api/auth/login` - Admin login
 - `POST /api/orders` - Create new order
 
@@ -141,9 +144,12 @@ Frontend runs on `http://localhost:3001`
 - `GET /api/orders` - Get all orders
 - `GET /api/orders/:id` - Get order by ID
 - `PATCH /api/orders/:id/status` - Update order status
-- `POST /api/products` - Create product (with image upload)
-- `PUT /api/products/:id` - Update product (with image upload)
+- `POST /api/products` - Create product with multiple categories (with image upload)
+- `PUT /api/products/:id` - Update product categories and details (with image upload)
 - `DELETE /api/products/:id` - Delete product
+- `POST /api/categories` - Create category
+- `PUT /api/categories/:id` - Update category
+- `DELETE /api/categories/:id` - Delete category
 - `GET /api/stats` - Get statistics
 
 ## Features
@@ -151,7 +157,7 @@ Frontend runs on `http://localhost:3001`
 ### Customer Flow
 
 1. **Home Page**: Select Dine In or Takeaway
-2. **Menu**: Browse products by category
+2. **Menu**: Browse products with category filtering (Sarapan Pagi, Ayam, Daging Sapi, Ikan, Minuman, Makanan Penutup, Happy Meal, McCafe, Cemilan, PaHe)
 3. **Cart**: Review items, adjust quantities
 4. **Checkout**: Confirm order summary
 5. **Payment**: Dummy QRIS payment (2-second delay)
@@ -163,8 +169,74 @@ Frontend runs on `http://localhost:3001`
 2. **Dashboard**: Real-time order monitoring with 5-second auto-refresh
 3. **New Order Highlight**: Orders < 1 minute old highlighted in yellow
 4. **Order Management**: Change status from "processed" to "completed"
-5. **Product Management**: CRUD operations with image upload
-6. **Statistics**: View total orders, revenue, and today's metrics
+5. **Product Management**: CRUD operations with multi-category assignment and image upload
+6. **Category Management**: Create, edit, and delete food/beverage categories (see Category CRUD below)
+7. **Statistics**: View total orders, revenue, and today's metrics
+
+## Category CRUD Feature
+
+### Overview
+
+The system includes a full category management system where products can belong to one or multiple categories. Categories are used for menu organization and filtering.
+
+### Available Categories
+
+- **Sarapan Pagi** - Menu sarapan pagi
+- **Daging Sapi** - Menu dengan daging sapi
+- **Ayam** - Menu dengan ayam
+- **Ikan** - Menu dengan ikan
+- **Minuman** - Berbagai macam minuman
+- **Makanan Penutup** - Dessert dan makanan penutup
+- **Happy Meal** - Paket happy meal
+- **McCafe** - Menu McCafe
+- **Cemilan** - Cemilan dan snack
+- **PaHe (Paket Hemat)** - Paket hemat dan promo
+
+### Admin Features
+
+- **Category Page** (`/admin/categories`): 
+  - View all categories in a table
+  - Create new categories with name and description
+  - Edit category name and description
+  - Delete categories
+  - Real-time updates
+
+- **Product Form Updates**:
+  - Products now use **multi-select** for categories (instead of single category dropdown)
+  - A product can belong to multiple categories simultaneously
+  - At least one category is required per product
+
+### Customer Features
+
+- **Category Filtering** in Menu (`/menu`):
+  - Filter buttons for each available category
+  - "Semua" (All) button to show all products
+  - Products filtered based on selected category
+  - Real-time product display
+
+### Database Schema
+
+**Categories Table**:
+```
+id (UUID, PK)
+name (STRING, UNIQUE)
+description (TEXT)
+createdAt (TIMESTAMP)
+updatedAt (TIMESTAMP)
+```
+
+**ProductCategory Join Table** (M:N Relationship):
+```
+id (UUID, PK)
+product_id (UUID, FK → products)
+category_id (UUID, FK → categories)
+createdAt (TIMESTAMP)
+updatedAt (TIMESTAMP)
+```
+
+**Products Table** (Modified):
+- Removed old `category` STRING column
+- Now uses many-to-many relationship with categories table
 
 ### Key Logic
 
@@ -226,16 +298,18 @@ npm run preview  # Preview production build
 3. **Customer Flow**:
    - Go to `http://localhost:3001`
    - Select "Dine In" or "Takeaway"
-   - Browse and add products
+   - Browse menu and filter by category ("Ayam", "Minuman", etc.)
+   - Add products to cart
    - Checkout and complete payment
    - View receipt with queue number
 
 4. **Admin Flow**:
    - Navigate to `/login`
    - Use: `admin` / `admin123`
-   - View dashboard with orders
-   - Check products page
-   - Create/edit/delete products
+   - View dashboard with real-time orders
+   - Click "🏷️ Categories" to manage categories
+   - Click "📋 Products" to manage products with multi-category support
+   - Create/edit/delete products and categories
 
 ## Notes
 
