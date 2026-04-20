@@ -9,6 +9,7 @@ import ordersRoutes from './routes/ordersRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
@@ -42,12 +43,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/admins', adminRoutes);
 
 // Error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('[Error]', err);
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-  res.status(statusCode).json({ error: message });
-});
+app.use(errorHandler);
 
 // Initialize database and start server
 const startServer = async () => {
