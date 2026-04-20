@@ -6,8 +6,9 @@ export class ProductController {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      const category_id = req.query.category_id as string | undefined;
 
-      const result = await ProductService.getAll(limit, offset);
+      const result = await ProductService.getAll(limit, offset, category_id);
       res.json(result);
     } catch (error: any) {
       console.error('[Get Products Error]', error.message);

@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
 
       <Container maxWidth="md" sx={{ zIndex: 1, position: 'relative', textAlign: 'center' }}>
         <Fade in timeout={800}>
-          <Box mb={8}>
+          <Box sx={{ mb: 8 }}>
             <Typography variant="h2" sx={{
               fontWeight: 900,
               color: '#DA291C',

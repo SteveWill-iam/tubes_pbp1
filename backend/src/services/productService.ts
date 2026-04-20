@@ -17,18 +17,25 @@ export interface UpdateProductPayload {
 }
 
 export class ProductService {
-  static async getAll(limit: number = 100, offset: number = 0) {
+  static async getAll(limit: number = 100, offset: number = 0, category_id?: string) {
+    const include: any = [
+      {
+        model: Category,
+        as: 'categories',
+        through: { attributes: [] },
+      },
+    ];
+
+    if (category_id) {
+      include[0].where = { id: category_id };
+    }
+
     const { count, rows } = await Product.findAndCountAll({
       order: [['created_at', 'DESC']],
       limit,
       offset,
-      include: [
-        {
-          model: Category,
-          as: 'categories',
-          through: { attributes: [] },
-        },
-      ],
+      include,
+      distinct: true,
     });
 
     return { total: count, products: rows };

@@ -53,7 +53,7 @@ const MenuPage = () => {
     const fetchProducts = async () => {
       try {
         const prodRes = await api.get(`/products?category_id=${selectedCategory}`);
-        const productsData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.data || [];
+        const productsData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.products || prodRes.data.data || [];
         setProducts(productsData);
       } catch (err) {
         console.error('Failed to fetch products', err);
