@@ -25,25 +25,35 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ title, children }) => 
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">{title}</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm">Welcome, {admin?.username}!</span>
+            <span className="text-sm">Welcome, {admin?.username} ({admin?.role})!</span>
             <button
               onClick={() => navigate('/admin')}
               className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"
             >
-              📊 Dashboard
+              ?? Dashboard
             </button>
-            <button
-              onClick={() => navigate('/admin/products')}
-              className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"
-            >
-              📋 Products
-            </button>
-            <button
-              onClick={() => navigate('/admin/categories')}
-              className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"
-            >
-              🏷️ Categories
-            </button>
+            {admin?.role === 'admin' && (
+              <>
+                <button
+                  onClick={() => navigate('/admin/products')}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"
+                >
+                  ?? Products
+                </button>
+                <button
+                  onClick={() => navigate('/admin/categories')}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"
+                >
+                  ??? Categories
+                </button>
+                <button
+                  onClick={() => navigate('/admin/users')}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"
+                >
+                  ?? Staff
+                </button>
+              </>
+            )}
             <button
               onClick={handleLogout}
               className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold px-4 py-2 rounded"

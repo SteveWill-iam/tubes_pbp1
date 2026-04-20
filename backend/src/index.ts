@@ -8,6 +8,7 @@ import productRoutes from './routes/productRoutes.js';
 import ordersRoutes from './routes/ordersRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/admins', adminRoutes);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

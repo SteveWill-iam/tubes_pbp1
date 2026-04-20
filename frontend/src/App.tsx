@@ -15,6 +15,7 @@ import { AdminLoginPage } from './pages/AdminLoginPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminProductsPage } from './pages/AdminProductsPage';
 import AdminCategoriesPage from './pages/AdminCategoriesPage';
+import { AdminUsersPage } from './pages/AdminUsersPage';
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/payment-method" element={<PaymentMethodPage />} />
+        <Route path="/payment-method" element={<PaymentMethodPage />} />        
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/receipt" element={<ReceiptPage />} />
 
@@ -42,7 +43,7 @@ function App() {
         <Route
           path="/admin/products"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={['admin']}>
               <AdminProductsPage />
             </PrivateRoute>
           }
@@ -50,8 +51,16 @@ function App() {
         <Route
           path="/admin/categories"
           element={
-            <PrivateRoute>
+            <PrivateRoute allowedRoles={['admin']}>
               <AdminCategoriesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <PrivateRoute allowedRoles={['admin']}>
+              <AdminUsersPage />
             </PrivateRoute>
           }
         />

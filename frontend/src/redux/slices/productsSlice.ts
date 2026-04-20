@@ -5,6 +5,7 @@ interface Product {
   name: string;
   description: string;
   category: string;
+  categories?: any[];
   price: number;
   image_url: string | null;
   created_at: string;

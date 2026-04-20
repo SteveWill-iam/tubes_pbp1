@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../config/database';
+import sequelize from '../config/database.js';
 
 class Category extends Model {
   public id!: string;
@@ -7,6 +7,8 @@ class Category extends Model {
   public description!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  declare products?: any[];
 }
 
 Category.init(

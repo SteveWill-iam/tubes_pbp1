@@ -20,6 +20,8 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
   declare price: number;
   declare image_url: string | null;
   declare created_at: Date;
+  
+  declare setCategories: (categories: any) => Promise<void>;
 }
 
 Product.init(

@@ -16,12 +16,12 @@ export class AuthService {
     }
 
     const token = jwt.sign(
-      { id: admin.id, username: admin.username },
+      { id: admin.id, username: admin.username, role: admin.role },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '24h' }
     );
 
-    return { token, admin: { id: admin.id, username: admin.username } };
+    return { token, admin: { id: admin.id, username: admin.username, role: admin.role } };        
   }
 
   static async hashPassword(password: string): Promise<string> {
