@@ -5,6 +5,11 @@ interface Category {
   id: string;
   name: string;
   description?: string;
+  sort_order?: number;
+  start_date?: string;
+  end_date?: string;
+  start_time?: string;
+  end_time?: string;
 }
 
 interface CategoriesState {
@@ -37,7 +42,7 @@ export const fetchCategories = createAsyncThunk(
 export const createCategory = createAsyncThunk(
   'categories/createCategory',
   async (
-    payload: { name: string; description?: string },
+    payload: { name: string; description?: string; sort_order?: number; start_date?: string; end_date?: string; start_time?: string; end_time?: string },
     { rejectWithValue }
   ) => {
     try {
@@ -54,7 +59,7 @@ export const createCategory = createAsyncThunk(
 export const updateCategory = createAsyncThunk(
   'categories/updateCategory',
   async (
-    payload: { id: string; name?: string; description?: string },
+    payload: { id: string; name?: string; description?: string; sort_order?: number; start_date?: string; end_date?: string; start_time?: string; end_time?: string },
     { rejectWithValue }
   ) => {
     try {

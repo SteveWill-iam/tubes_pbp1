@@ -5,6 +5,11 @@ class Category extends Model {
   public id!: string;
   public name!: string;
   public description!: string;
+  public sort_order!: number | null;
+  public start_date!: string | null;
+  public end_date!: string | null;
+  public start_time!: string | null;
+  public end_time!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -26,6 +31,27 @@ Category.init(
     },
     description: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    sort_order: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0,
+    },
+    start_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    end_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    start_time: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    end_time: {
+      type: DataTypes.TIME,
       allowNull: true,
     },
   },

@@ -4,10 +4,11 @@ import categoryService from '../services/categoryService.js';
 export class CategoryController {
   async getAll(req: Request, res: Response) {
     try {
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 50; // Increased default limit for categories
       const offset = parseInt(req.query.offset as string) || 0;
+      const isAdmin = req.query.admin === 'true';
 
-      const result = await categoryService.getAll(limit, offset);
+      const result = await categoryService.getAll(limit, offset, isAdmin);
 
       res.json({
         success: true,
@@ -41,7 +42,7 @@ export class CategoryController {
 
   async create(req: Request, res: Response) {
     try {
-      const { name, description } = req.body;
+      const { name, description, sort_order, start_date, end_date, start_time, end_time } = req.body;
 
       if (!name || name.trim() === '') {
         return res.status(400).json({
@@ -50,7 +51,7 @@ export class CategoryController {
         });
       }
 
-      const category = await categoryService.create(name, description);
+      const category = await categoryService.create(name, description, sort_order, start_date, end_date, start_time, end_time);
 
       res.status(201).json({
         success: true,
@@ -67,9 +68,9 @@ export class CategoryController {
   async update(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { name, description } = req.body;
+      const { name, description, sort_order, start_date, end_date, start_time, end_time } = req.body;
 
-      const category = await categoryService.update(id, { name, description });
+      const category = await categoryService.update(id, { name, description, sort_order, start_date, end_date, start_time, end_time });
 
       res.json({
         success: true,

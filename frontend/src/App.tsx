@@ -2,13 +2,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { PrivateRoute } from './routes/PrivateRoute';
 
 // Customer Pages
-import { HomePage } from './pages/HomePage';
-import { MenuPage } from './pages/MenuPage';
-import { CartPage } from './pages/CartPage';
+import HomePage from './pages/HomePage';
+import MenuPage from './pages/MenuPage';
+import CartPage from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { PaymentMethodPage } from './pages/PaymentMethodPage';
-import { PaymentPage } from './pages/PaymentPage';
-import { ReceiptPage } from './pages/ReceiptPage';
+import PaymentPage from './pages/PaymentPage';
+import ReceiptPage from './pages/ReceiptPage';
 
 // Admin Pages
 import { AdminLoginPage } from './pages/AdminLoginPage';

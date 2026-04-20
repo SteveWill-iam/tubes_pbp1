@@ -1,148 +1,149 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { CreditCard, QrCodeScanner, Payments } from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
-import { setCurrentOrder } from '../redux/slices/ordersSlice';
+import type { RootState } from '../redux/store';
 import { clearCart } from '../redux/slices/cartSlice';
-import apiClient from '../api/client';
-import { QRCodeSimulator } from '../components/QRCodeSimulator';
+import api from '../api/client';
 
-export const PaymentPage: React.FC = () => {
+const PaymentPage = () => {
+  const [processing, setProcessing] = useState(false);
+  const cart = useSelector((state: RootState) => state.cart);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const { items, total, order_type, payment_method } = useSelector((state: RootState) => state.cart);
-  const [status, setStatus] = useState<'qr' | 'processing' | 'completed' | 'error'>('qr');
-  const [message, setMessage] = useState('Processing payment...');
-  const paymentProcessed = useRef(false);
+  const location = useLocation();
+  const paymentState = location.state as { total: number; subtotal: number; tax: number } | null;
 
-  // Redirect if no items or payment method not selected
   useEffect(() => {
-    if (items.length === 0) {
-      navigate('/menu');
-      return;
+    if (cart.items.length === 0 && !processing) {
+      navigate('/');
     }
+  }, [cart.items.length, processing, navigate]);
 
-    if (!payment_method) {
-      navigate('/payment-method');
-      return;
+  const handlePayment = async (method: string) => {
+    setProcessing(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const payload = {
+        total_amount: paymentState?.total || cart.total,
+        status: 'paid',
+        items: cart.items.map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          subtotal: item.price * item.quantity
+        }))
+      };
+
+      const response = await api.post('/orders', payload);
+      dispatch(clearCart());
+      navigate('/receipt', { state: { orderId: response.data.id, method, total: paymentState?.total || cart.total } });
+    } catch {
+      setProcessing(false);
+      alert('Payment failed. Please try again.');
     }
-
-    // If payment method is counter, skip QR and go straight to processing
-    if (payment_method === 'counter') {
-      setStatus('processing');
-    }
-  }, [items, payment_method, navigate]);
-
-  // Handle QR completion or immediate processing
-  const handleQRComplete = () => {
-    setStatus('processing');
   };
 
-  // Process payment
-  useEffect(() => {
-    if (status !== 'processing' || paymentProcessed.current || items.length === 0 || !payment_method) {
-      return;
-    }
+  if (processing) {
+    return (
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#fff',
+        gap: 3
+      }}>
+        <CircularProgress size={80} sx={{ color: '#FFC72C' }} thickness={5} />
+        <Typography variant="h4" sx={{ fontWeight: 800, color: '#333' }}>Processing Payment...</Typography>
+        <Typography color="text.secondary">Please wait a moment</Typography>
+      </Box>
+    );
+  }
 
-    const processPayment = async () => {
-      try {
-        paymentProcessed.current = true;
-
-        // Simulate 2-second payment delay
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Create order on backend with payment_method
-        const response = await apiClient.post('/orders', {
-          items: items.map((item) => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-          })),
-          order_type,
-          payment_method,
-        });
-
-        // Set current order and clear cart
-        dispatch(setCurrentOrder(response.data));
-        dispatch(clearCart());
-        setStatus('completed');
-        setMessage('Order created successfully!');
-
-        // Redirect to receipt after 1 second
-        setTimeout(() => {
-          navigate('/receipt');
-        }, 1000);
-      } catch (error: any) {
-        console.error('Payment error:', error);
-        paymentProcessed.current = false; // Reset so user can retry
-        setStatus('error');
-        setMessage(error.response?.data?.error || 'Payment failed. Please try again.');
-      }
-    };
-
-    processPayment();
-  }, [status, items, order_type, payment_method, dispatch, navigate]);
+  const paymentMethods = [
+    { icon: <QrCodeScanner sx={{ fontSize: 28 }} />, label: 'QR Pay', color: '#FFC72C' },
+    { icon: <CreditCard sx={{ fontSize: 28 }} />, label: 'Credit/Debit Card', color: '#FFC72C' },
+    { icon: <Payments sx={{ fontSize: 28 }} />, label: 'Cash (Pay at counter)', color: '#FFC72C' },
+  ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-red-600 to-yellow-400">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-2xl w-full text-center border-4 border-red-600">
-        {/* QR Payment State */}
-        {status === 'qr' && payment_method === 'machine' && (
-          <>
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">💳 Silakan Bayar</h1>
-            <div className="bg-yellow-200 p-4 rounded-lg mb-6 border-2 border-dashed border-red-600">
-              <p className="text-red-600 text-sm mb-2 font-bold">Total Amount:</p>
-              <p className="text-3xl font-bold text-red-600">Rp {total.toLocaleString()}</p>
-            </div>
-            <QRCodeSimulator onComplete={handleQRComplete} />
-          </>
-        )}
+    <Box sx={{
+      minHeight: '100vh',
+      backgroundColor: '#fff',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      px: 4
+    }}>
+      <Typography variant="h4" sx={{
+        fontWeight: 700,
+        color: '#333',
+        mb: 6,
+        textAlign: 'center'
+      }}>
+        Please select a payment type
+      </Typography>
 
-        {/* Processing State */}
-        {status === 'processing' && (
-          <>
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">
-              {payment_method === 'counter' ? '💰 Menunggu Pembayaran di Kasir' : 'Processing Payment'}
-            </h1>
-            <div className="mb-6 flex justify-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-600 border-t-transparent"></div>
-            </div>
-            <div className="bg-yellow-200 p-6 rounded-lg mb-6 border-2 border-dashed border-red-600">
-              <p className="text-red-600 text-sm mb-2 font-bold">Total Amount:</p>
-              <p className="text-3xl font-bold text-red-600">Rp {total.toLocaleString()}</p>
-            </div>
-            <p className="text-gray-600">{message}</p>
-          </>
-        )}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        width: '100%',
+        maxWidth: 380
+      }}>
+        {paymentMethods.map((method) => (
+          <Button
+            key={method.label}
+            variant="contained"
+            onClick={() => handlePayment(method.label)}
+            startIcon={method.icon}
+            sx={{
+              backgroundColor: method.color,
+              color: '#333',
+              fontWeight: 700,
+              fontSize: '1rem',
+              py: 2,
+              px: 4,
+              borderRadius: 6,
+              textTransform: 'none',
+              justifyContent: 'center',
+              gap: 1.5,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              '&:hover': {
+                backgroundColor: '#FFB300',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              }
+            }}
+          >
+            {method.label}
+          </Button>
+        ))}
+      </Box>
 
-        {/* Completed State */}
-        {status === 'completed' && (
-          <>
-            <h1 className="text-2xl font-bold text-green-600 mb-6">✓ Pesanan Berhasil!</h1>
-            <p className="text-gray-600 mb-6">{message}</p>
-            <div className="flex justify-center mb-6">
-              <div className="text-6xl">🎉</div>
-            </div>
-          </>
-        )}
-
-        {/* Error State */}
-        {status === 'error' && (
-          <>
-            <h1 className="text-2xl font-bold text-red-600 mb-6">✗ Pembayaran Gagal</h1>
-            <p className="text-gray-600 mb-6">{message}</p>
-            <button
-              onClick={() => {
-                paymentProcessed.current = false;
-                setStatus('processing');
-                navigate('/checkout');
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded shadow-lg"
-            >
-              Coba Lagi
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+      <Button
+        variant="outlined"
+        onClick={() => navigate('/cart')}
+        sx={{
+          mt: 6,
+          borderColor: '#333',
+          color: '#333',
+          fontWeight: 600,
+          borderRadius: 6,
+          px: 8,
+          py: 1.5,
+          textTransform: 'none',
+          fontSize: '1rem',
+          '&:hover': { borderColor: '#333', backgroundColor: '#f5f5f5' }
+        }}
+      >
+        Back
+      </Button>
+    </Box>
   );
 };
+
+export default PaymentPage;

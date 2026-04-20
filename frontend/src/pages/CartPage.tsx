@@ -1,103 +1,262 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { Box, Typography, Button, IconButton, Divider } from '@mui/material';
+import { Add, Remove, Delete, ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { RootState, AppDispatch } from '../redux/store';
-import { removeFromCart, updateQuantity } from '../redux/slices/cartSlice';
-import { getImageUrl } from '../utils/imageUrl';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../redux/store';
+import { updateQuantity, removeFromCart } from '../redux/slices/cartSlice';
+export const formatRupiah = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
-export const CartPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
+const CartPage = () => {
+  const cart = useSelector((state: RootState) => state.cart);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, total } = useSelector((state: RootState) => state.cart);
 
-  if (items.length === 0) {
+  const handleUpdateQty = (id: string, currentQty: number, delta: number) => {
+    const newQty = currentQty + delta;
+    if (newQty <= 0) {
+      dispatch(removeFromCart(id));
+    } else {
+      dispatch(updateQuantity({ product_id: id, quantity: newQty }));
+    }
+  };
+
+  if (cart.items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-50">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center border-4 border-red-600">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">🛒 Empty Cart</h1>
-          <p className="text-gray-600 mb-6">Your cart is empty. Please add items from the menu.</p>
-          <button
-            onClick={() => navigate('/menu')}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow-lg"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        gap: 3,
+        backgroundColor: '#f8f8f8'
+      }}>
+        <ShoppingCartEmpty />
+        <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 700 }}>Your cart is empty</Typography>
+        <Button
+          variant="contained"
+          onClick={() => navigate('/')}
+          sx={{
+            backgroundColor: '#FFC72C',
+            color: '#333',
+            fontWeight: 700,
+            borderRadius: 6,
+            px: 6,
+            py: 1.5,
+            textTransform: 'none',
+            fontSize: '1rem',
+            '&:hover': { backgroundColor: '#FFB300' }
+          }}
+        >
+          Back to Menu
+        </Button>
+      </Box>
     );
   }
 
+  // Tax calculation (11% PPN)
+  const tax = Math.round(cart.total * 0.11);
+  const grandTotal = cart.total + tax;
+
   return (
-    <div className="min-h-screen bg-yellow-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-red-600 mb-6">📄 Shopping Cart</h1>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFC72C' }}>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          {items.map((item) => (
-            <div key={item.product_id} className="flex gap-4 items-center py-4 border-b last:border-b-0">
-              {item.image_url && (
-                <div className="flex-shrink-0 bg-gray-100 rounded flex items-center justify-center w-20 h-20">
-                  <img src={getImageUrl(item.image_url)} alt={item.name} className="w-20 h-20 object-contain rounded" />
-                </div>
-              )}
-              
-              <div className="flex-1">
-                <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
-                <p className="text-sm text-gray-600">Rp {item.price.toLocaleString()} each</p>
-              </div>
+      {/* ─── Header ─── */}
+      <Box sx={{
+        pt: 4,
+        pb: 2,
+        px: 4,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+      }}>
+        <IconButton onClick={() => navigate('/')} sx={{ color: '#333' }}>
+          <ArrowBack />
+        </IconButton>
+        <Typography variant="h4" sx={{
+          fontWeight: 800,
+          color: '#333',
+          fontStyle: 'italic'
+        }}>
+          Order list
+        </Typography>
+      </Box>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => dispatch(updateQuantity({ product_id: item.product_id, quantity: item.quantity - 1 }))}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold py-1 px-3 rounded"
-                >
-                  −
-                </button>
-                <span className="font-bold text-lg w-8 text-center">{item.quantity}</span>
-                <button
-                  onClick={() => dispatch(updateQuantity({ product_id: item.product_id, quantity: item.quantity + 1 }))}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold py-1 px-3 rounded"
-                >
-                  +
-                </button>
-              </div>
+      {/* ─── Items ─── */}
+      <Box sx={{ flex: 1, px: 4, pb: 2 }}>
+        {cart.items.map((item, idx) => (
+          <Box key={item.product_id}>
+            <Box sx={{
+              display: 'flex',
+              py: 2,
+              gap: 2,
+            }}>
+              {/* Product Image */}
+              <Box
+                component="img"
+                src={item.image_url || undefined}
+                alt={item.name}
+                sx={{
+                  width: 60,
+                  height: 60,
+                  objectFit: 'contain',
+                  borderRadius: 2,
+                  backgroundColor: '#fff',
+                  p: 0.5,
+                  flexShrink: 0
+                }}
+              />
+              <Box sx={{ flex: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#333', flex: 1 }}>
+                    {item.name}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#333', ml: 2 }}>
+                    x {item.quantity}
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#333', ml: 2, minWidth: 100, textAlign: 'right' }}>
+                    {formatRupiah(item.price * item.quantity)}
+                  </Typography>
+                </Box>
 
-              <span className="font-bold text-lg text-red-600 w-24 text-right">
-                Rp {(item.price * item.quantity).toLocaleString()}
-              </span>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    color="error"
+                    onClick={() => dispatch(removeFromCart(item.product_id))}
+                    sx={{
+                      borderRadius: 4,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      borderColor: '#DA291C',
+                      color: '#DA291C',
+                      px: 2,
+                      minWidth: 'auto'
+                    }}
+                  >
+                    Remove
+                  </Button>
 
-              <button
-                onClick={() => dispatch(removeFromCart(item.product_id))}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded ml-4"
-              >
-                🗑️
-              </button>
-            </div>
-          ))}
-        </div>
+                  <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: '1px solid #999',
+                    borderRadius: 1,
+                    overflow: 'hidden'
+                  }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleUpdateQty(item.product_id, item.quantity, -1)}
+                      sx={{ borderRadius: 0, color: '#333', px: 1, py: 0.5, backgroundColor: '#eee', '&:hover': { backgroundColor: '#ddd' } }}
+                    >
+                      <Remove sx={{ fontSize: 16 }} />
+                    </IconButton>
+                    <Typography sx={{
+                      fontWeight: 800,
+                      minWidth: 36,
+                      textAlign: 'center',
+                      fontSize: '0.9rem',
+                      backgroundColor: '#fff',
+                      py: 0.5,
+                      color: '#333'
+                    }}>
+                      {item.quantity}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleUpdateQty(item.product_id, item.quantity, 1)}
+                      sx={{ borderRadius: 0, color: '#333', px: 1, py: 0.5, backgroundColor: '#eee', '&:hover': { backgroundColor: '#ddd' } }}
+                    >
+                      <Add sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+            {idx < cart.items.length - 1 && <Divider sx={{ borderColor: 'rgba(0,0,0,0.15)' }} />}
+          </Box>
+        ))}
+      </Box>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center text-2xl font-bold">
-            <span>Total:</span>
-            <span className="text-red-600">Rp {total.toLocaleString()}</span>
-          </div>
-        </div>
+      {/* ─── Tax & Total ─── */}
+      <Box sx={{
+        px: 4,
+        py: 2,
+        backgroundColor: 'rgba(0,0,0,0.08)',
+        borderTop: '2px solid rgba(0,0,0,0.15)'
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 4, mb: 0.5 }}>
+          <Typography sx={{ fontWeight: 600, color: '#555', fontSize: '0.9rem' }}>Tax (PPN 11%)</Typography>
+          <Typography sx={{ fontWeight: 700, color: '#333', fontSize: '0.9rem', minWidth: 110, textAlign: 'right' }}>{formatRupiah(tax)}</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+          <Typography sx={{ fontWeight: 800, color: '#333', fontSize: '1.1rem' }}>Total</Typography>
+          <Typography sx={{ fontWeight: 900, color: '#333', fontSize: '1.1rem', minWidth: 110, textAlign: 'right' }}>{formatRupiah(grandTotal)}</Typography>
+        </Box>
+      </Box>
 
-        <div className="flex gap-4">
-          <button
-            onClick={() => navigate('/menu')}
-            className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold py-3 px-4 rounded shadow-lg"
-          >
-            Continue Shopping
-          </button>
-          <button
-            onClick={() => navigate('/checkout')}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded shadow-lg"
-          >
-            Proceed to Checkout
-          </button>
-        </div>
-      </div>
-    </div>
+      {/* ─── Bottom Buttons ─── */}
+      <Box sx={{
+        display: 'flex',
+        gap: 0,
+        backgroundColor: '#fff',
+        borderTop: '1px solid #ddd'
+      }}>
+        <Button
+          variant="text"
+          onClick={() => navigate('/')}
+          sx={{
+            flex: 1,
+            py: 2.5,
+            fontWeight: 700,
+            fontSize: '1rem',
+            textTransform: 'none',
+            color: '#333',
+            borderRadius: 0,
+            borderRight: '1px solid #ddd',
+            '&:hover': { backgroundColor: '#f5f5f5' }
+          }}
+        >
+          Add more
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => navigate('/payment', { state: { total: grandTotal, subtotal: cart.total, tax } })}
+          sx={{
+            flex: 1,
+            py: 2.5,
+            fontWeight: 700,
+            fontSize: '1rem',
+            textTransform: 'none',
+            backgroundColor: '#27AE60',
+            color: '#fff',
+            borderRadius: 0,
+            boxShadow: 'none',
+            '&:hover': { backgroundColor: '#219653', boxShadow: 'none' }
+          }}
+        >
+          Proceed to checkout
+        </Button>
+      </Box>
+    </Box>
   );
 };
+
+// Simple empty cart icon component
+const ShoppingCartEmpty = () => (
+  <Box sx={{
+    width: 80,
+    height: 80,
+    borderRadius: '50%',
+    backgroundColor: '#FFF3E0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }}>
+    <Delete sx={{ fontSize: 40, color: '#FFC72C' }} />
+  </Box>
+);
+
+export default CartPage;
