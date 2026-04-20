@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
   token: string | null;
-  admin: { id: string; username: string } | null;
+  admin: { id: string; username: string; role: 'admin' | 'cashier' } | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -26,7 +26,7 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
-    loginSuccess: (state, action: PayloadAction<{ token: string; admin: { id: string; username: string } }>) => {
+    loginSuccess: (state, action: PayloadAction<{ token: string; admin: { id: string; username: string; role: 'admin' | 'cashier' } }>) => {
       state.token = action.payload.token;
       state.admin = action.payload.admin;
       state.isLoading = false;

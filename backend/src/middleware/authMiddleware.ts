@@ -21,3 +21,16 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     res.status(401).json({ error: 'Invalid token' });
   }
 };
+export const authorizeRole = (roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.admin || !req.admin.role) {
+      return res.status(403).json({ error: 'Role not found' });
+    }
+
+    if (!roles.includes(req.admin.role)) {
+      return res.status(403).json({ error: 'Forbidden: Insufficient role' });
+    }
+
+    next();
+  };
+};

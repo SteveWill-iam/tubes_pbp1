@@ -9,15 +9,24 @@ export async function up(queryInterface: any, Sequelize: any) {
 
   // Hash password for admin
   const adminPassword = await bcrypt.hash('admin123', 10);
+  const cashierPassword = await bcrypt.hash('cashier123', 10);
 
-  // Insert admin
+  // Insert admin and cashier
   await queryInterface.bulkInsert('admins', [
     {
       id: uuidv4(),
       username: 'admin',
       password_hash: adminPassword,
+      role: 'admin',
       created_at: new Date(),
     },
+    {
+      id: uuidv4(),
+      username: 'cashier',
+      password_hash: cashierPassword,
+      role: 'cashier',
+      created_at: new Date(),
+    }
   ]);
 
   // Insert sample products

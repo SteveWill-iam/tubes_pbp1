@@ -6,15 +6,17 @@ interface AdminAttributes {
   id: string;
   username: string;
   password_hash: string;
+  role: 'admin' | 'cashier';
   created_at: Date;
 }
 
-interface AdminCreationAttributes extends Optional<AdminAttributes, 'id' | 'created_at'> {}
+interface AdminCreationAttributes extends Optional<AdminAttributes, 'id' | 'created_at' | 'role'> {}
 
 class Admin extends Model<AdminAttributes, AdminCreationAttributes> implements AdminAttributes {
   declare id: string;
   declare username: string;
   declare password_hash: string;
+  declare role: 'admin' | 'cashier';
   declare created_at: Date;
 }
 
@@ -33,6 +35,11 @@ Admin.init(
     password_hash: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    role: {
+      type: DataTypes.ENUM('admin', 'cashier'),
+      allowNull: false,
+      defaultValue: 'admin',
     },
     created_at: {
       type: DataTypes.DATE,
