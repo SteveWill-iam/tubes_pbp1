@@ -5,6 +5,11 @@ interface Category {
   id: string;
   name: string;
   description?: string;
+  sort_order?: number;
+  start_date?: string;
+  end_date?: string;
+  start_time?: string;
+  end_time?: string;
 }
 
 interface CategoriesState {
@@ -24,9 +29,9 @@ const initialState: CategoriesState = {
 // Async thunks
 export const fetchCategories = createAsyncThunk(
   'categories/fetchCategories',
-  async (_, { rejectWithValue }) => {
+  async (isAdmin: boolean = false, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get('/categories?limit=999');
+      const response = await apiClient.get(`/categories?limit=999${isAdmin ? '&admin=true' : ''}`);
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch categories');
@@ -37,7 +42,7 @@ export const fetchCategories = createAsyncThunk(
 export const createCategory = createAsyncThunk(
   'categories/createCategory',
   async (
-    payload: { name: string; description?: string },
+    payload: { name: string; description?: string; sort_order?: number; start_date?: string; end_date?: string; start_time?: string; end_time?: string },
     { rejectWithValue }
   ) => {
     try {
@@ -54,7 +59,7 @@ export const createCategory = createAsyncThunk(
 export const updateCategory = createAsyncThunk(
   'categories/updateCategory',
   async (
-    payload: { id: string; name?: string; description?: string },
+    payload: { id: string; name?: string; description?: string; sort_order?: number; start_date?: string; end_date?: string; start_time?: string; end_time?: string },
     { rejectWithValue }
   ) => {
     try {

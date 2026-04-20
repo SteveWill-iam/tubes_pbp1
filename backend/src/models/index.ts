@@ -3,6 +3,7 @@ import Product from './Product.js';
 import Order from './Order.js';
 import OrderItem from './OrderItem.js';
 import Category from './Category.js';
+import ProductCategory from './ProductCategory.js';
 
 // Setup associations
 Order.hasMany(OrderItem, {
@@ -23,17 +24,17 @@ OrderItem.belongsTo(Product, {
 
 // M:N relationship between Product and Category
 Product.belongsToMany(Category, {
-  through: 'ProductCategory',
+  through: ProductCategory,
   foreignKey: 'product_id',
   otherKey: 'category_id',
   as: 'categories',
 });
 
 Category.belongsToMany(Product, {
-  through: 'ProductCategory',
+  through: ProductCategory,
   foreignKey: 'category_id',
   otherKey: 'product_id',
   as: 'products',
 });
 
-export { Admin, Product, Order, OrderItem, Category };
+export { Admin, Product, Order, OrderItem, Category, ProductCategory };

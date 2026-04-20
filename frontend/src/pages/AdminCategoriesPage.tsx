@@ -30,7 +30,7 @@ export function AdminCategoriesPage() {
   });
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(fetchCategories(false));
   }, [dispatch]);
 
   const handleInputChange = (

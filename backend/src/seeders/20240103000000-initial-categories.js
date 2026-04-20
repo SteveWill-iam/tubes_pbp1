@@ -3,6 +3,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export async function up(queryInterface, Sequelize) {
+  await queryInterface.bulkDelete('categories', null, {});
   const categories = [
     { id: uuidv4(), name: 'Sarapan Pagi', description: 'Menu sarapan pagi' },
     { id: uuidv4(), name: 'Daging Sapi', description: 'Menu dengan daging sapi' },

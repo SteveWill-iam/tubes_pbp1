@@ -1,137 +1,133 @@
-import React, { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../redux/store';
-import { clearCurrentOrder } from '../redux/slices/ordersSlice';
-import { getImageUrl } from '../utils/imageUrl';
+import { useEffect } from 'react';
+import { Box, Typography, Button, Container, Paper } from '@mui/material';
+import { CheckCircle } from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
+export const formatRupiah = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
-export const ReceiptPage: React.FC = () => {
+const ReceiptPage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const receiptRef = useRef<HTMLDivElement>(null);
-  const { currentOrder } = useSelector((state: RootState) => state.orders);
+  const location = useLocation();
+  const { state } = location as { state: { orderId: number | string; method: string; total: number } | null };
 
-  if (!currentOrder) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-50">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center border-4 border-red-600">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">No Order</h1>
-          <p className="text-gray-600 mb-6">No order found. Please complete the checkout process.</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow-lg"
-          >
-            Return Home
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const displayOrderNumber =
+    typeof state?.orderId === 'number' ? String(state.orderId).padStart(3, '0') : String(state?.orderId || '');
 
-  const handlePrint = () => {
-    window.print();
-  };
+  useEffect(() => {
+    if (!state || !state.orderId) {
+      navigate('/');
+    }
 
-  const handleReturnHome = () => {
-    dispatch(clearCurrentOrder());
-    navigate('/');
-  };
+    const timer = setTimeout(() => {
+      navigate('/');
+    }, 15000);
+
+    return () => clearTimeout(timer);
+  }, [state, navigate]);
+
+  if (!state) return null;
 
   return (
-    <div className="min-h-screen bg-yellow-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        <div
-          ref={receiptRef}
-          className="bg-white rounded-lg shadow-md p-8 mb-6 print:shadow-none print:border print:border-black"
-        >
-          <div className="text-center mb-8 pb-4 border-b-2 border-dashed">
-            <h1 className="text-4xl font-bold text-red-600 mb-2">RECEIPT</h1>
-            <p className="text-gray-600">Thank you for your order!</p>
-          </div>
+    <Box sx={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #FFC72C 0%, #FFD54F 40%, #fff 40%)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      px: 3
+    }}>
+      <Container maxWidth="xs">
+        <Paper sx={{
+          p: 5,
+          borderRadius: 4,
+          textAlign: 'center',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Top stripe */}
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 6,
+            backgroundColor: '#27AE60'
+          }} />
 
-          <div className="text-center mb-8 pb-4 border-b-2 border-dashed">
-            <p className="text-gray-600 text-sm mb-2">QUEUE NUMBER</p>
-            <p className="text-6xl font-bold text-red-600">{currentOrder.queue_number}</p>
-          </div>
+          <CheckCircle sx={{ fontSize: 72, color: '#27AE60', mb: 2 }} />
 
-          <div className="mb-6 pb-4 border-b">
-            <h3 className="font-bold text-lg text-gray-800 mb-3">Order Details</h3>
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Order Type:</span>
-              <span>{currentOrder.order_type === 'dine_in' ? '🍽️ Dine In' : '🛍️ Takeaway'}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Order ID:</span>
-              <span className="font-mono text-xs">{currentOrder.id.substring(0, 8)}...</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Time:</span>
-              <span>{new Date(currentOrder.created_at).toLocaleString()}</span>
-            </div>
-          </div>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: '#333', mb: 0.5 }}>
+            Payment Successful!
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 4, fontSize: '0.95rem' }}>
+            Thank you for your order
+          </Typography>
 
-          <div className="mb-6 pb-4 border-b">
-            <h3 className="font-bold text-lg text-gray-800 mb-3">Payment Information</h3>
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Payment Method:</span>
-              <span>{currentOrder.payment_method === 'counter' ? '🏪 Bayar di Kasir' : '📱 Bayar di Mesin'}</span>
-            </div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600">Payment Status:</span>
-              <span className={currentOrder.payment_status === 'completed' ? 'font-bold text-green-600' : 'font-bold text-yellow-600'}>
-                {currentOrder.payment_status === 'completed' ? '✓ Pembayaran Selesai' : '⏳ Menunggu Pembayaran'}
-              </span>
-            </div>
-          </div>
+          <Box sx={{
+            border: '2px dashed #ddd',
+            borderRadius: 3,
+            p: 4,
+            mb: 4,
+            backgroundColor: '#FAFAFA'
+          }}>
+            <Typography variant="overline" color="text.secondary" sx={{ fontSize: '0.85rem', letterSpacing: 2 }}>
+              Order Number
+            </Typography>
+            <Typography variant="h2" sx={{
+              fontWeight: 900,
+              color: '#DA291C',
+              my: 1.5,
+              fontFamily: 'monospace'
+            }}>
+              {displayOrderNumber}
+            </Typography>
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              mt: 2,
+              px: 2
+            }}>
+              <Typography sx={{ fontWeight: 600, color: '#888' }}>Total paid</Typography>
+              <Typography sx={{ fontWeight: 800, color: '#333' }}>{formatRupiah(state.total)}</Typography>
+            </Box>
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              mt: 1,
+              px: 2
+            }}>
+              <Typography sx={{ fontWeight: 600, color: '#888' }}>Method</Typography>
+              <Typography sx={{ fontWeight: 700, color: '#333' }}>{state.method}</Typography>
+            </Box>
+          </Box>
 
-          <div className="mb-6 pb-4 border-b">
-            <h3 className="font-bold text-lg text-gray-800 mb-3">Items</h3>
-            {currentOrder.items?.map((item) => (
-              <div key={item.id} className="flex gap-3 mb-3 pb-3 border-b last:border-b-0 last:pb-0">
-                {item.product?.image_url && (
-                  <div className="flex-shrink-0 bg-gray-100 rounded flex items-center justify-center w-16 h-16">
-                    <img src={getImageUrl(item.product.image_url)} alt={item.product.name} className="w-16 h-16 object-contain rounded" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <span className="font-semibold">{item.product?.name || 'Unknown'} × {item.quantity}</span>
-                    <span className="font-bold">Rp {(item.price * item.quantity).toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Rp {item.price.toLocaleString()} each</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mb-8 pb-4 border-b-2 border-dashed">
-            <div className="flex justify-between text-xl font-bold">
-              <span>TOTAL:</span>
-              <span className="text-red-600">Rp {currentOrder.total_price.toLocaleString()}</span>
-            </div>
-          </div>
-
-          <div className="text-center text-xs text-gray-500">
-            <p>Please keep your queue number</p>
-            <p>Your order will be called when ready</p>
-          </div>
-        </div>
-
-        <div className="flex gap-4 print:hidden">
-          <button
-            onClick={handlePrint}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded shadow-lg"
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => navigate('/')}
+            sx={{
+              backgroundColor: '#FFC72C',
+              color: '#333',
+              fontWeight: 700,
+              borderRadius: 6,
+              py: 2,
+              fontSize: '1rem',
+              textTransform: 'none',
+              boxShadow: '0 4px 12px rgba(255, 199, 44, 0.3)',
+              '&:hover': { backgroundColor: '#FFB300' }
+            }}
           >
-            🞨 Print Receipt
-          </button>
-          <button
-            onClick={handleReturnHome}
-            className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold py-3 px-4 rounded shadow-lg"
-          >
-            ↻ Return to Home
-          </button>
-        </div>
-      </div>
-    </div>
+            Start New Order
+          </Button>
+
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+            Returning to menu in 15 seconds...
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
+
+export default ReceiptPage;
