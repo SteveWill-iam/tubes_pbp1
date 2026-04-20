@@ -7,7 +7,10 @@ export const formatRupiah = (amount: number) => new Intl.NumberFormat('id-ID', {
 const ReceiptPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state } = location as { state: { orderId: number; method: string; total: number } | null };
+  const { state } = location as { state: { orderId: number | string; method: string; total: number } | null };
+
+  const displayOrderNumber =
+    typeof state?.orderId === 'number' ? String(state.orderId).padStart(3, '0') : String(state?.orderId || '');
 
   useEffect(() => {
     if (!state || !state.orderId) {
@@ -77,7 +80,7 @@ const ReceiptPage = () => {
               my: 1.5,
               fontFamily: 'monospace'
             }}>
-              {String(state.orderId).padStart(3, '0')}
+              {displayOrderNumber}
             </Typography>
             <Box sx={{
               display: 'flex',

@@ -35,7 +35,7 @@ const CartPage = () => {
         <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 700 }}>Your cart is empty</Typography>
         <Button
           variant="contained"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/menu')}
           sx={{
             backgroundColor: '#FFC72C',
             color: '#333',
@@ -70,7 +70,7 @@ const CartPage = () => {
         alignItems: 'center',
         gap: 2,
       }}>
-        <IconButton onClick={() => navigate('/')} sx={{ color: '#333' }}>
+        <IconButton onClick={() => navigate('/menu')} sx={{ color: '#333' }}>
           <ArrowBack />
         </IconButton>
         <Typography variant="h4" sx={{
@@ -206,7 +206,7 @@ const CartPage = () => {
       }}>
         <Button
           variant="text"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/menu')}
           sx={{
             flex: 1,
             py: 2.5,

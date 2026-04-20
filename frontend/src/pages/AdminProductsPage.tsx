@@ -20,6 +20,7 @@ export const AdminProductsPage: React.FC = () => {
     price: '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -32,17 +33,21 @@ export const AdminProductsPage: React.FC = () => {
     };
 
     fetchProducts();
-    dispatch(fetchCategories());
+    dispatch(fetchCategories(true));
   }, [dispatch]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
-    setFormData((prev) => ({ ...prev, categories: selectedOptions }));
+  const toggleCategory = (categoryId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(categoryId)
+        ? prev.categories.filter((id) => id !== categoryId)
+        : [...prev.categories, categoryId],
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,9 +58,10 @@ export const AdminProductsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
 
     if (formData.categories.length === 0) {
-      alert('Please select at least one category');
+      setFormError('Please select at least one category');
       return;
     }
 
@@ -85,7 +91,8 @@ export const AdminProductsPage: React.FC = () => {
       setImageFile(null);
       setEditingId(null);
       setShowForm(false);
-    } catch (error) {
+    } catch (error: any) {
+      setFormError(error.response?.data?.error || 'Failed to save product');
       console.error('Failed to save product:', error);
     }
   };
@@ -99,6 +106,7 @@ export const AdminProductsPage: React.FC = () => {
     });
     setEditingId(product.id);
     setShowForm(true);
+    setFormError(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -119,6 +127,7 @@ export const AdminProductsPage: React.FC = () => {
           setShowForm(!showForm);
           setEditingId(null);
           setFormData({ name: '', description: '', categories: [], price: '' });
+          setFormError(null);
         }}
         className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-6 shadow-lg"
       >
@@ -128,8 +137,13 @@ export const AdminProductsPage: React.FC = () => {
       {showForm && (
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
+          {formError && (
+            <div className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {formError}
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
               <input
                 type="text"
                 name="name"
@@ -139,24 +153,36 @@ export const AdminProductsPage: React.FC = () => {
                 required
                 className="px-3 py-2 border border-gray-300 rounded"
               />
-              <select
-                multiple
-                value={formData.categories}
-                onChange={handleCategoryChange}
-                required
-                className="px-3 py-2 border border-gray-300 rounded"
-                size={4}
-              >
+              <div className="text-sm text-gray-600 self-center">
+                Pilih satu atau lebih kategori
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-2 block text-sm font-medium text-gray-700">Categories</label>
+              <div className="flex flex-wrap gap-2">
                 {categories && categories.length > 0 ? (
-                  categories.map((cat: any) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))
+                  categories.map((cat: any) => {
+                    const selected = formData.categories.includes(cat.id);
+                    return (
+                      <button
+                        type="button"
+                        key={cat.id}
+                        onClick={() => toggleCategory(cat.id)}
+                        className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
+                          selected
+                            ? 'border-blue-600 bg-blue-600 text-white'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:text-blue-600'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })
                 ) : (
-                  <option disabled>No categories available</option>
+                  <span className="text-sm text-gray-500">No categories available</span>
                 )}
-              </select>
+              </div>
             </div>
 
             <textarea

@@ -1,32 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Button, Card, CardContent, CardMedia, IconButton, Badge, Slide } from '@mui/material';
 import { ShoppingCart, Add, Remove } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import api from '../api/client';
 import type { RootState } from '../redux/store';
-import { addToCart, removeFromCart, updateQuantity } from '../redux/slices/cartSlice';
+import { addToCart, clearCart, removeFromCart, updateQuantity } from '../redux/slices/cartSlice';
+import { getImageUrl } from '../utils/imageUrl';
 export const formatRupiah = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
-  image: string;
 }
 
+type CategoryFilter = string | 'all';
+
 interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
-  price: string;
+  price: number;
   image_url: string;
-  category_id: number;
+  categories?: Array<{ id: string; name: string }>;
 }
 
 const MenuPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const cart = useSelector((state: RootState) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,48 +39,44 @@ const MenuPage = () => {
         const catRes = await api.get('/categories');
         const categoriesData = Array.isArray(catRes.data) ? catRes.data : catRes.data.data || [];
         setCategories(categoriesData);
-        if (categoriesData.length > 0) {
-          setSelectedCategory(categoriesData[0].id);
-        }
+
+        const prodRes = await api.get('/products?limit=999');
+        const productsData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.products || prodRes.data.data || [];
+        setProducts(productsData);
       } catch (err) {
-        console.error('Failed to fetch categories', err);
+        console.error('Failed to fetch menu data', err);
       }
     };
     fetchCategories();
   }, []);
 
-  // Fetch products whenever selected category changes
-  useEffect(() => {
-    if (selectedCategory === null) return;
-    const fetchProducts = async () => {
-      try {
-        const prodRes = await api.get(`/products?category_id=${selectedCategory}`);
-        const productsData = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data.products || prodRes.data.data || [];
-        setProducts(productsData);
-      } catch (err) {
-        console.error('Failed to fetch products', err);
-      }
-    };
-    fetchProducts();
-  }, [selectedCategory]);
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return products;
+    }
+
+    return products.filter((product) =>
+      product.categories?.some((cat) => cat.id === selectedCategory)
+    );
+  }, [products, selectedCategory]);
 
   const handleAddToCart = (product: Product) => {
     dispatch(addToCart({
-      product_id: String(String(product.id)),
+      product_id: product.id,
       name: product.name,
-      price: parseFloat(product.price),
+      price: Number(product.price),
       image_url: product.image_url,
       quantity: 1
     }));
   };
 
-  const getCartQuantity = (productId: number | string) => {
-    const item = cart.items.find(i => Number(i.product_id) === Number(productId));
+  const getCartQuantity = (productId: string) => {
+    const item = cart.items.find((i) => i.product_id === productId);
     return item ? item.quantity : 0;
   };
 
-  const handleRemoveOne = (productId: number | string) => {
-    const item = cart.items.find(i => Number(i.product_id) === Number(productId));
+  const handleRemoveOne = (productId: string) => {
+    const item = cart.items.find((i) => i.product_id === productId);
     if (item) {
       if (item.quantity <= 1) {
         dispatch(removeFromCart(item.product_id));
@@ -89,6 +87,11 @@ const MenuPage = () => {
   };
 
   const totalItems = cart.items.reduce((a, b) => a + b.quantity, 0);
+
+  const handleCancelOrder = () => {
+    dispatch(clearCart());
+    navigate('/');
+  };
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#f8f8f8' }}>
@@ -107,6 +110,56 @@ const MenuPage = () => {
         flexShrink: 0,
         boxShadow: '2px 0 8px rgba(0,0,0,0.04)'
       }}>
+        <Box
+          key="all"
+          onClick={() => setSelectedCategory('all')}
+          sx={{
+            width: 72,
+            py: 1.5,
+            px: 0.5,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0.5,
+            cursor: 'pointer',
+            borderRadius: 2,
+            borderLeft: selectedCategory === 'all' ? '4px solid #FFC72C' : '4px solid transparent',
+            backgroundColor: selectedCategory === 'all' ? '#FFF8E1' : 'transparent',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: '#FFF8E1',
+            }
+          }}
+        >
+          <Box
+            component="div"
+            sx={{
+              width: 44,
+              height: 44,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 2,
+              backgroundColor: '#FFC72C',
+              color: '#5D4037',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+            }}
+          >
+            ALL
+          </Box>
+          <Typography sx={{
+            fontSize: '0.6rem',
+            fontWeight: selectedCategory === 'all' ? 700 : 500,
+            color: selectedCategory === 'all' ? '#333' : '#888',
+            textAlign: 'center',
+            lineHeight: 1.2,
+            letterSpacing: '-0.2px'
+          }}>
+            Semua
+          </Typography>
+        </Box>
+
         {categories.map((cat) => (
           <Box
             key={cat.id}
@@ -130,16 +183,22 @@ const MenuPage = () => {
             }}
           >
             <Box
-              component="img"
-              src={cat.image}
-              alt={cat.name}
+              component="div"
               sx={{
                 width: 44,
                 height: 44,
-                objectFit: 'contain',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 borderRadius: 2,
+                backgroundColor: '#FFE082',
+                color: '#5D4037',
+                fontWeight: 800,
+                fontSize: '0.9rem',
               }}
-            />
+            >
+              {cat.name.charAt(0).toUpperCase()}
+            </Box>
             <Typography sx={{
               fontSize: '0.6rem',
               fontWeight: selectedCategory === cat.id ? 700 : 500,
@@ -197,7 +256,9 @@ const MenuPage = () => {
             color: '#292929',
             fontSize: '1.4rem'
           }}>
-            {categories.find(c => c.id === selectedCategory)?.name || 'Menu'}
+            {selectedCategory === 'all'
+              ? 'Semua Menu'
+              : categories.find((c) => c.id === selectedCategory)?.name || 'Menu'}
           </Typography>
         </Box>
 
@@ -216,7 +277,7 @@ const MenuPage = () => {
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 2,
           }}>
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <Card
                 key={product.id}
                 onClick={() => handleAddToCart(product)}
@@ -241,7 +302,7 @@ const MenuPage = () => {
                 <CardMedia
                   component="img"
                   height="130"
-                  image={product.image_url}
+                  image={getImageUrl(product.image_url)}
                   alt={product.name}
                   sx={{
                     objectFit: 'contain',
@@ -269,13 +330,13 @@ const MenuPage = () => {
                     fontSize: '0.9rem',
                     color: '#DA291C'
                   }}>
-                    {formatRupiah(parseFloat(product.price))}
+                    {formatRupiah(Number(product.price))}
                   </Typography>
                 </CardContent>
 
                 {/* Add / Counter overlay */}
                 {(() => {
-                  const qty = getCartQuantity(String(product.id));
+                  const qty = getCartQuantity(product.id);
                   if (qty === 0) {
                     return (
                       <IconButton
@@ -317,7 +378,7 @@ const MenuPage = () => {
                     >
                       <IconButton
                         size="small"
-                        onClick={() => handleRemoveOne(String(product.id))}
+                        onClick={() => handleRemoveOne(product.id)}
                         sx={{
                           borderRadius: 0,
                           width: 28,
@@ -357,6 +418,13 @@ const MenuPage = () => {
               </Card>
             ))}
           </Box>
+          {filteredProducts.length === 0 && (
+            <Box sx={{ py: 8, textAlign: 'center' }}>
+              <Typography sx={{ color: '#666', fontWeight: 600 }}>
+                Belum ada produk pada kategori ini.
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         {/* ─── Bottom Cart / Order Bar ─── */}
@@ -408,6 +476,22 @@ const MenuPage = () => {
             <Box sx={{ display: 'flex', gap: 1.5 }}>
               <Button
                 variant="outlined"
+                onClick={handleCancelOrder}
+                sx={{
+                  borderColor: '#DA291C',
+                  color: '#DA291C',
+                  fontWeight: 700,
+                  borderRadius: 6,
+                  px: 3,
+                  fontSize: '0.85rem',
+                  textTransform: 'none',
+                  '&:hover': { borderColor: '#B71C1C', backgroundColor: '#FFEBEE' }
+                }}
+              >
+                Cancel Order
+              </Button>
+              <Button
+                variant="outlined"
                 onClick={() => navigate('/cart')}
                 sx={{
                   borderColor: '#333',
@@ -455,6 +539,22 @@ const MenuPage = () => {
             backgroundColor: '#fff',
             borderTop: '1px solid #eee'
           }}>
+            <Button
+              variant="outlined"
+              onClick={handleCancelOrder}
+              sx={{
+                borderColor: '#DA291C',
+                color: '#DA291C',
+                fontWeight: 700,
+                borderRadius: 6,
+                px: 4,
+                py: 1,
+                textTransform: 'none',
+                '&:hover': { borderColor: '#B71C1C', backgroundColor: '#FFEBEE' }
+              }}
+            >
+              Cancel Order
+            </Button>
           </Box>
         )}
       </Box>

@@ -61,10 +61,10 @@ export const CheckoutPage: React.FC = () => {
 
         <div className="flex gap-4">
           <button
-            onClick={() => navigate('/cart')}
+            onClick={() => navigate('/menu')}
             className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded"
           >
-            Back to Cart
+            Back to Menu
           </button>
           <button
             onClick={() => navigate('/payment-method')}

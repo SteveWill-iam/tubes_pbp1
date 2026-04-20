@@ -7,6 +7,8 @@ import type { RootState } from '../redux/store';
 import { clearCart } from '../redux/slices/cartSlice';
 import api from '../api/client';
 
+type BackendPaymentMethod = 'counter' | 'machine';
+
 const PaymentPage = () => {
   const [processing, setProcessing] = useState(false);
   const cart = useSelector((state: RootState) => state.cart);
@@ -21,24 +23,41 @@ const PaymentPage = () => {
     }
   }, [cart.items.length, processing, navigate]);
 
-  const handlePayment = async (method: string) => {
+  const handlePayment = async (methodLabel: string, paymentMethod: BackendPaymentMethod) => {
+    if (!cart.order_type) {
+      alert('Order type is missing. Please start your order again.');
+      navigate('/');
+      return;
+    }
+
+    if (!cart.items.length) {
+      alert('Cart is empty.');
+      navigate('/menu');
+      return;
+    }
+
     setProcessing(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const payload = {
-        total_amount: paymentState?.total || cart.total,
-        status: 'paid',
+        order_type: cart.order_type,
+        payment_method: paymentMethod,
         items: cart.items.map(item => ({
           product_id: item.product_id,
-          quantity: item.quantity,
-          subtotal: item.price * item.quantity
+          quantity: item.quantity
         }))
       };
 
       const response = await api.post('/orders', payload);
       dispatch(clearCart());
-      navigate('/receipt', { state: { orderId: response.data.id, method, total: paymentState?.total || cart.total } });
+      navigate('/receipt', {
+        state: {
+          orderId: response.data.queue_number ?? response.data.id,
+          method: methodLabel,
+          total: paymentState?.total || cart.total,
+        },
+      });
     } catch {
       setProcessing(false);
       alert('Payment failed. Please try again.');
@@ -63,10 +82,10 @@ const PaymentPage = () => {
     );
   }
 
-  const paymentMethods = [
-    { icon: <QrCodeScanner sx={{ fontSize: 28 }} />, label: 'QR Pay', color: '#FFC72C' },
-    { icon: <CreditCard sx={{ fontSize: 28 }} />, label: 'Credit/Debit Card', color: '#FFC72C' },
-    { icon: <Payments sx={{ fontSize: 28 }} />, label: 'Cash (Pay at counter)', color: '#FFC72C' },
+  const paymentMethods: Array<{ icon: JSX.Element; label: string; color: string; method: BackendPaymentMethod }> = [
+    { icon: <QrCodeScanner sx={{ fontSize: 28 }} />, label: 'QR Pay', color: '#FFC72C', method: 'machine' },
+    { icon: <CreditCard sx={{ fontSize: 28 }} />, label: 'Credit/Debit Card', color: '#FFC72C', method: 'machine' },
+    { icon: <Payments sx={{ fontSize: 28 }} />, label: 'Cash (Pay at counter)', color: '#FFC72C', method: 'counter' },
   ];
 
   return (
@@ -99,7 +118,7 @@ const PaymentPage = () => {
           <Button
             key={method.label}
             variant="contained"
-            onClick={() => handlePayment(method.label)}
+            onClick={() => handlePayment(method.label, method.method)}
             startIcon={method.icon}
             sx={{
               backgroundColor: method.color,
