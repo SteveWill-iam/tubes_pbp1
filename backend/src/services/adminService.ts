@@ -1,5 +1,5 @@
 import { Admin } from '../models/index.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export class AdminService {
   static async getAll() {
