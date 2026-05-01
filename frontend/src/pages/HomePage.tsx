@@ -57,7 +57,7 @@ const HomePage: React.FC = () => {
               letterSpacing: '-1px',
               mb: 2
             }}>
-              McAntigrav Kiosk
+              McDonald Kiosk
             </Typography>
             <Typography variant="h5" sx={{
               color: '#333',

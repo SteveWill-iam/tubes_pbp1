@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { AppError } from '../utils/AppError.js';
 
 export interface AuthRequest extends Request {
   admin?: any;
@@ -21,6 +22,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     res.status(401).json({ error: 'Invalid token' });
   }
 };
+
 export const authorizeRole = (roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.admin || !req.admin.role) {
@@ -33,4 +35,14 @@ export const authorizeRole = (roles: string[]) => {
 
     next();
   };
+};
+
+export const validateLogin = (req: Request, res: Response, next: NextFunction) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return next(new AppError('Username and password are required', 400));
+  }
+
+  next();
 };

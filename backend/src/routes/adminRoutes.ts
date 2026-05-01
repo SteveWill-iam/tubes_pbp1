@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AdminController } from '../controllers/adminController.js';
 import { authMiddleware, authorizeRole } from '../middleware/authMiddleware.js';
 
-const router = Router();
+const router: Router = Router();
 
 // Only 'admin' role can access admin management
 router.use(authMiddleware, authorizeRole(['admin']));
