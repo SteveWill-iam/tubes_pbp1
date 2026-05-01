@@ -18,6 +18,8 @@ export async function up(queryInterface: any, Sequelize: any) {
       username: 'admin',
       password_hash: adminPassword,
       role: 'admin',
+      email: 'admin@mcd.local',
+      nama: 'Super Admin',
       created_at: new Date(),
     },
     {
@@ -25,6 +27,8 @@ export async function up(queryInterface: any, Sequelize: any) {
       username: 'cashier',
       password_hash: cashierPassword,
       role: 'cashier',
+      email: 'cashier@mcd.local',
+      nama: 'Main Cashier',
       created_at: new Date(),
     }
   ]);
