@@ -1,19 +1,11 @@
 import { Request, Response } from 'express';
 import { OrdersService } from '../services/ordersService.js';
-import { OrderStatus, PaymentMethod } from '../models/Order.js';
 
 export class OrdersController {
   static async create(req: Request, res: Response) {
     try {
+      // Validation handled by validateOrder middleware
       const { items, order_type, payment_method } = req.body;
-
-      if (!items || !order_type) {
-        return res.status(400).json({ error: 'Items and order_type are required' });
-      }
-
-      if (payment_method && !Object.values(PaymentMethod).includes(payment_method)) {
-        return res.status(400).json({ error: 'Invalid payment_method' });
-      }
 
       const order = await OrdersService.createOrder({ items, order_type, payment_method });
       res.status(201).json(order);
@@ -50,11 +42,8 @@ export class OrdersController {
   static async updateStatus(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      // Validation handled by validateOrderStatus middleware
       const { status } = req.body;
-
-      if (!status || !Object.values(OrderStatus).includes(status)) {
-        return res.status(400).json({ error: 'Valid status is required' });
-      }
 
       const order = await OrdersService.updateOrderStatus(id, status);
       res.json(order);
