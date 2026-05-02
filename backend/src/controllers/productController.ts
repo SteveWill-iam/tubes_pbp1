@@ -29,25 +29,8 @@ export class ProductController {
 
   static async create(req: Request, res: Response) {
     try {
-      let { name, description, categories, price } = req.body;
-
-      if (!name || !categories || !price) {
-        return res.status(400).json({ error: 'Name, categories, and price are required' });
-      }
-
-      // Parse categories if it comes as JSON string from FormData
-      if (typeof categories === 'string') {
-        try {
-          categories = JSON.parse(categories);
-        } catch (e) {
-          return res.status(400).json({ error: 'Invalid categories format' });
-        }
-      }
-
-      // Validate categories is an array
-      if (!Array.isArray(categories) || categories.length === 0) {
-        return res.status(400).json({ error: 'At least one category is required' });
-      }
+      // Validation handled by validateProduct middleware
+      const { name, description, categories, price } = req.body;
 
       let image_url: string | undefined;
 
@@ -76,16 +59,8 @@ export class ProductController {
   static async update(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      let { name, description, categories, price } = req.body;
-
-      // Parse categories if it comes as JSON string from FormData
-      if (categories && typeof categories === 'string') {
-        try {
-          categories = JSON.parse(categories);
-        } catch (e) {
-          return res.status(400).json({ error: 'Invalid categories format' });
-        }
-      }
+      // Validation handled by validateProduct middleware
+      const { name, description, categories, price } = req.body;
 
       let image_url: string | undefined;
 

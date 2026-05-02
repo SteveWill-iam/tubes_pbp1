@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';
 import { updateQuantity, removeFromCart } from '../redux/slices/cartSlice';
+import { getImageUrl } from '../utils/imageUrl';
 export const formatRupiah = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
 const CartPage = () => {
@@ -94,7 +95,7 @@ const CartPage = () => {
               {/* Product Image */}
               <Box
                 component="img"
-                src={item.image_url || undefined}
+                src={getImageUrl(item.image_url) || undefined}
                 alt={item.name}
                 sx={{
                   width: 60,

@@ -14,6 +14,9 @@ export const getImageUrl = (imagePath: string | null | undefined): string => {
   // Get the backend base URL (remove /api from the end)
   const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) || 'http://localhost:3000/api';
   const baseUrl = apiUrl.replace('/api', '');
+
+  // Normalize: ensure path starts with /
+  const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   
-  return `${baseUrl}${imagePath}`;
+  return `${baseUrl}${normalizedPath}`;
 };
