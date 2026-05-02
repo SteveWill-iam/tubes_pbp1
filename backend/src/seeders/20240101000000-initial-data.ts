@@ -18,7 +18,7 @@ export async function up(queryInterface: any, Sequelize: any) {
       username: 'admin',
       password_hash: adminPassword,
       role: 'admin',
-      email: 'admin@mcd.local',
+      email: 'joanne.larkin28@ethereal.email',
       nama: 'Super Admin',
       created_at: new Date(),
     },

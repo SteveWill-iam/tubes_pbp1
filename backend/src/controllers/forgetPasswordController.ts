@@ -49,7 +49,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<any> 
     });
 
     const transporter = createTransporter();
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"MCDonald" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'MCDonald admin Password Reset Code',
@@ -70,6 +70,8 @@ export const forgotPassword = async (req: Request, res: Response): Promise<any> 
       `,
     });
 
+    console.log('[Forgot Password] email send info:', info);
+    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     return res.json({ message: 'If an account with that email exists, a code has been sent.' });
   } catch (err) {
     console.error('[Forgot Password]', err);
