@@ -1,28 +1,54 @@
 erDiagram
-
     ADMINS {
         uuid id PK
-        string username
+        string username UK
         string password_hash
+        enum role "admin, cashier"
+        string email UK
+        string nama
+        string reset_otp
+        timestamp reset_otp_expires
         timestamp created_at
+    }
+
+    CATEGORIES {
+        uuid id PK
+        string name UK
+        text description
+        int sort_order
+        date start_date
+        date end_date
+        time start_time
+        time end_time
+        timestamp createdAt
+        timestamp updatedAt
     }
 
     PRODUCTS {
         uuid id PK
         string name
         text description
-        string category
         int price
         string image_url
         timestamp created_at
     }
 
+    PRODUCT_CATEGORY {
+        uuid id PK
+        uuid product_id FK
+        uuid category_id FK
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
     ORDERS {
         uuid id PK
         int queue_number
-        enum status "processed | completed"
-        enum order_type "dine_in | takeaway"
+        enum status "processed, completed"
+        enum order_type "dine_in, takeaway"
         int total_price
+        enum payment_method "counter, machine"
+        enum payment_status "pending, completed"
         timestamp created_at
     }
 
@@ -34,5 +60,7 @@ erDiagram
         int price
     }
 
-    ORDERS ||--o{ ORDER_ITEMS : has
-    PRODUCTS ||--o{ ORDER_ITEMS : contains
+    CATEGORIES ||--o{ PRODUCT_CATEGORY : contains
+    PRODUCTS ||--o{ PRODUCT_CATEGORY : "belongs to"
+    PRODUCTS ||--o{ ORDER_ITEMS : "ordered as"
+    ORDERS ||--o{ ORDER_ITEMS : "has"
