@@ -4,25 +4,20 @@ import bcrypt from 'bcryptjs';
 export class AdminService {
   static async getAll() {
     return await Admin.findAll({
-      attributes: ['id', 'username', 'role', 'created_at'],
+      attributes: ['id', 'username', 'email', 'nama', 'role', 'created_at'],
       order: [['created_at', 'DESC']]
     });
   }
 
   static async getById(id: string) {
     return await Admin.findByPk(id, {
-      attributes: ['id', 'username', 'role', 'created_at']
+      attributes: ['id', 'username', 'email', 'nama', 'role', 'created_at']
     });
   }
 
-  static async create(data: { username: string; password?: string; role: 'admin' | 'cashier' }) {
+  static async create(data: { username: string; password?: string; role: 'admin' | 'cashier'; email?: string; nama?: string }) {
     if (!data.username || !data.password || !data.role) {
       throw new Error('Username, password, and role are required');
-    }
-    
-    const existingUser = await Admin.findOne({ where: { username: data.username } });
-    if (existingUser) {
-      throw new Error('Username already exists');
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -31,25 +26,31 @@ export class AdminService {
     const admin = await Admin.create({
       username: data.username,
       password_hash,
-      role: data.role
+      role: data.role,
+      email: data.email,
+      nama: data.nama
     });
 
     const { password_hash: _, ...adminWithoutPassword } = admin.toJSON();
     return adminWithoutPassword;
   }
 
-  static async update(id: string, data: { username?: string; password?: string; role?: 'admin' | 'cashier' }) {
+  static async update(id: string, data: { username?: string; password?: string; role?: 'admin' | 'cashier'; email?: string; nama?: string }) {
     const admin = await Admin.findByPk(id);
     if (!admin) {
       throw new Error('User not found');
     }
 
-    if (data.username && data.username !== admin.username) {
-      const existingUser = await Admin.findOne({ where: { username: data.username } });
-      if (existingUser) {
-        throw new Error('Username already exists');
-      }
+    if (data.username) {
       admin.username = data.username;
+    }
+
+    if (data.email) {
+      admin.email = data.email;
+    }
+
+    if (data.nama) {
+      admin.nama = data.nama;
     }
 
     if (data.password) {
