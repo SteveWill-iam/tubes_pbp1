@@ -12,6 +12,7 @@ export const AdminUsersPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'cashier'>('cashier');
   
@@ -25,11 +26,13 @@ export const AdminUsersPage: React.FC = () => {
     if (user) {
       setEditingId(user.id);
       setUsername(user.username);
+      setEmail(user.email || '');
       setPassword('');
       setRole(user.role);
     } else {
       setEditingId(null);
       setUsername('');
+      setEmail('');
       setPassword('');
       setRole('cashier'); // Or no default, force user to select.
     }
@@ -48,12 +51,13 @@ export const AdminUsersPage: React.FC = () => {
         id: editingId,
         data: {
           username,
+          email,
           ...(password ? { password } : {}),
           role
         }
       }));
     } else {
-      await dispatch(createAdmin({ username, password, role }));
+      await dispatch(createAdmin({ username, email, password, role }));
     }
     closeModal();
   };
@@ -85,6 +89,7 @@ export const AdminUsersPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -93,6 +98,7 @@ export const AdminUsersPage: React.FC = () => {
               {items.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">{user.username}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap capitalize">{user.role}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
@@ -129,6 +135,17 @@ export const AdminUsersPage: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  className="w-full border rounded p-2"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full border rounded p-2"
                 />
               </div>

@@ -4,6 +4,7 @@ import client from '../../api/client';
 export interface AdminUser {
   id: string;
   username: string;
+  email: string;
   role: 'admin' | 'cashier';
   created_at: string;
 }
